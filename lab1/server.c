@@ -98,6 +98,7 @@ void parse_GET_req(char *file_name, int client_sock){
     }
     if(strstr(file_name, "html") != NULL){
         send_HTML(file_name, client_sock);
+        return;
     }
     else{
         printf("IN 404\n");
