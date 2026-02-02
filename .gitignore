@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 *.env
+*.o
 
 TCP_UDP_Socket_programming_example/
 
