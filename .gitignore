@@ -11,6 +11,8 @@
 *.sln.docstates
 *.env
 
+TCP_UDP_Socket_programming_example/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
