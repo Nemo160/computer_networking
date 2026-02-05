@@ -1,13 +1,20 @@
-src = $(wildcard *.c)
-obj = $(src:.c=.o)
+client: client.o tid.o
+	gcc client.c -o client
+	gcc tid.c -o tid
 
-CFLAGS = --std=c11 -g
+tid: tid.o
+	gcc tid.c -o tid
 
-web_server: $(obj)
-	$(CC) $(CFLAGS) -o $@ $^
+client.o: client.c
+	gcc -c client.c
 
-.PHONY: clean
+tid.o: tid.c
+	gcc -c tid.c
+
 
 clean:
-	rm -f $(obj) web_server
+	rm -rf *.o 
+
+target: dependencies
+	action
 

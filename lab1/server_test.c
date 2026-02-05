@@ -17,7 +17,6 @@ int main(){
     struct sockaddr_in channel;
     struct sockaddr_in clientaddr;
     int clientaddrlen;
-
    // pid_t pid;
     //set and allow address
     memset(&channel, 0, sizeof(channel)); // fill struct with 0

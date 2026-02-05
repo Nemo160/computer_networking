@@ -7,36 +7,47 @@
 #include <unistd.h>
 
 //serverport and buffer size
-#define SERVER_PORT 8080
-#define BUFFER_SIZE 50//
+#define SERVER_PORT 37
+#define BUFFER_SIZE 2048//
 #define SERVER_IP "127.0.0.1"
 
 
 int main(){
-    int sd; //socket
-    char buf[BUFFER_SIZE];
-    struct sockaddr_in serveraddr;
-    sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //
+    int sd; socket(AF_INET, SOCK_DGRAM, 0); // socket
 
     //set and allow address
-    memset(&serveraddr, 0, sizeof(struct sockaddr_in));
+    struct sockaddr_in serveraddr;
+    memset(&serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET; //declare that ip is ipv4 
-    inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);//gör om ip strängen till rätt format
     serveraddr.sin_port = htons(SERVER_PORT);
-    
-    //connect(socket, struct of serveraddr as a struct sockaddr, length of sockaddr)
-    connect(sd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    if(inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr) != 1){
+        printf("INET FAILED\n");
+        close(sd);
+        return -1;
+    }//gör om ip strängen till rätt format
 
-    //write and 
     const char *msg = "hello";
-    write(sd, "hello world from client!\n", BUFFER_SIZE-1);
+    if (sendto(sd, msg, sizeof(msg), 0,
+        (struct sockaddr*) &serveraddr, sizeof(serveraddr)) < 0) {
+        printf("sendto\n");
+        close(sd);
+        return -1;
+    }
 
-    //read(sd, buf, BUFFER_SIZE-1);
-    read(sd, buf, BUFFER_SIZE-1);
+    char buf[BUFFER_SIZE];
+    struct sockaddr_in from;
+    socklen_t fromlen = sizeof(from);
+
+    ssize_t n = recvfrom(sd, buf, sizeof(buf)-1 , 0, (struct sockaddr*)&from, &fromlen);
+    if(n < 0){
+        printf("ERR: recieve\n");
+        close(sd);
+        return -1;
+    }
+
+    buf[n] = '\0';
+    printf("Replied with:%s\n",buf);
     
-    buf[BUFFER_SIZE-1] = '\0';
-    printf("%s\n",buf);
-    //
     close(sd);
     return 0;
 }
