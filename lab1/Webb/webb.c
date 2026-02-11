@@ -24,8 +24,12 @@ void send_404(int client_sock);
 
 char *make_filepath(const char *filename);
 
-int main(){
-  //  int opt = 1;
+int main(int argc, char *argv[]){
+    int port = SERVER_PORT;
+    if(argc > 1){
+        port = atoi(argv[1]);
+    }    
+    int opt = 1;
     int client_fd = 1;
     int req_sd;
     struct sockaddr_in addr;
@@ -40,15 +44,15 @@ int main(){
         printf("SOCKET COULD NOT BE CREATED!\n");
         exit(1);
     }
-    // if(setsockopt(req_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){
-    //     printf("setsocketopt to SO_REUSEADDR");
-    // }
+    if(setsockopt(req_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){
+         printf("setsocketopt to SO_REUSEADDR");
+    }
 
     printf("SOOCKET CREATED\n");
     memset(&addr, 0, sizeof(addr)); // fill struct with 0
     addr.sin_family = AF_INET; 
     addr.sin_addr.s_addr = htonl(INADDR_ANY); //declares what address to listen on - on serverside, listens on all own 
-    addr.sin_port = htons(SERVER_PORT);
+    addr.sin_port = htons(port);
    
     //PASSIVE WAIT FOR CONNECTION
     //SERVER: BIND, WAIT, AND LISTEN TO CONNECTIONS

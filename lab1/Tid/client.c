@@ -7,14 +7,18 @@
 #include <unistd.h>
 #include <time.h>
 
-//serverport and buffer size
-#define SERVER_PORT 8080
-#define BUFFER_SIZE 56//
+
+#define SERVER_PORT 8080 //DEFAULT
 #define SERVER_IP "127.0.0.1"
 #define RFC_TIME 2208988800UL
 
 
-int main(){
+int main(int argc, char *argv[]){
+    int port = SERVER_PORT;
+    if(argc > 1){
+        port = atoi(argv[1]);
+    }
+    
     int opt =1;
     int sd;
 
@@ -31,7 +35,7 @@ int main(){
     //set and allow address
     memset(&serveraddr, 0, sizeof(struct sockaddr_in));
     serveraddr.sin_family = AF_INET; //declare that ip is ipv4 
-    serveraddr.sin_port = htons(SERVER_PORT);
+    serveraddr.sin_port = htons(port);
     inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);
 
     //SEND FROM CLIENT
