@@ -17,10 +17,10 @@
 
 //
 void recv_client_req(int client_sock);
-void parse_GET_req(char *filepath, int client_sock);
-int send_JPG(char *file_name, int client_sock);
-int send_HTML(char *file_name, int client_sock);
 void send_404(int client_sock);
+int send_file(char *file_name, int client_sock);
+int send_header(const char *file_type, int client_sock, long size);
+
 
 char *make_filepath(const char *filename);
 
@@ -29,6 +29,7 @@ int main(int argc, char *argv[]){
     if(argc > 1){
         port = atoi(argv[1]);
     }    
+
     int opt = 1;
     int client_fd = 1;
     int req_sd;
@@ -37,34 +38,34 @@ int main(int argc, char *argv[]){
     socklen_t clientaddrlen;
 
     //SETUP REQUEST SOCKET:
-    //SOCK_DGRAM for UDP CONNECTION
+    //SOCK_DGRAM for UDP CONNECTION or SOCK_STREAM FOR TCP IPPROTO
 
     req_sd = socket(AF_INET, SOCK_STREAM, 0);
     if(req_sd <0) {
         printf("SOCKET COULD NOT BE CREATED!\n");
-        exit(1);
+        return -1;
     }
     if(setsockopt(req_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){
-         printf("setsocketopt to SO_REUSEADDR");
+        printf("setsocketopt to SO_REUSEADDR");
     }
 
     printf("SOOCKET CREATED\n");
     memset(&addr, 0, sizeof(addr)); // fill struct with 0
     addr.sin_family = AF_INET; 
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); //declares what address to listen on - on serverside, listens on all own 
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);
-   
+
     //PASSIVE WAIT FOR CONNECTION
-    //SERVER: BIND, WAIT, AND LISTEN TO CONNECTIONS
+    //SERVER: BIND AND LISTEN FOR CONNECTIONS
 
     if(bind(req_sd, (struct sockaddr*) &addr, sizeof(addr)) < 0){
         printf("ER:bind\n");
-        exit(1);
+        return -1;
     }
 
     if((listen(req_sd,10)) < 0){
         printf("ER:listen\n");
-        exit(1);
+        return -1;
     }
 
     printf("LISTENING TO PORT: %d\n", SERVER_PORT);
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]){
     while(1){
         client_fd = accept(req_sd, (struct sockaddr*) &clientaddr, &clientaddrlen);
         printf("ACCEPTING CONNECTION\n");
-       // client_fd = accept(req_sd, 0, 0);
+        //client_fd = accept(req_sd, 0, 0);
 
         recv_client_req(client_fd);
         printf("CLOSING CLIENT_FD\n");
@@ -94,12 +95,11 @@ void recv_client_req(int client_sock){
         return;
     }
     buffer[n] = '\0';
-    printf("BUFFER CLIENT: %s\n", buffer);
+    //printf("BUFFER CLIENT: %s\n", buffer);
 
-    if(strncmp(buffer, "GET ", 4) != 0){
-         send_404(client_sock);
-         return;
-     }
+    // if(strncmp(buffer, "GET ", 4) != 0){ //if its not a get request
+    //     return;
+    // }
 
     char *file_name = buffer + 4;  //after "GET " 
     char *bs = strchr(file_name, ' '); //jump to blank space
@@ -109,32 +109,9 @@ void recv_client_req(int client_sock){
     }
 
     *bs = '\0';
-    parse_GET_req(file_name, client_sock); //sends and closes file
-
+    send_file(file_name, client_sock);
 }
 
-//parse what type of file client is requesting
-void parse_GET_req(char *file_type, int client_sock){
-
-    if(strstr(file_type, "jpg") != NULL){
-        send_JPG(file_type, client_sock);
-
-    }
-    else if(strstr(file_type, "html") != NULL){
-        send_HTML(file_type, client_sock);
-
-    }
-    //default
-    else if(strcmp(file_type, "/") == 0){
-        send_HTML(file_type, client_sock);
-    }
-    
-    else{
-        send_404(client_sock);
-        printf("Could not find:\n");
-    }
-    
-}
 
 void send_404(int client_sock){
     char header[BF_METADATA_SIZE];
@@ -151,46 +128,7 @@ void send_404(int client_sock){
     send(client_sock, header, header_len, 0);
 }
 
-
-int send_HTML(char *file_name, int client_sock){
-    char buffer[BF_SIZE] = {0};
-    char* filepath = make_filepath(file_name);
-    FILE *f = fopen(filepath, "rb");
-
-    if(!f){
-        printf("COULD NOT OPEN FILE");
-        send_404(client_sock);
-        free(filepath);
-        return -1;
-    }
-    
-    //get size of file
-    fseek(f, 0, SEEK_END); // point to end of file
-    long size = ftell(f); // return bytes at tht point
-    rewind(f);  //returns pointer to beginning 
-
-    char header[BF_METADATA_SIZE];
-    int header_len = snprintf(header, sizeof(header),
-        "HTTP/1.1 200 OK\r\n"
-        "Server: Demo Web Server\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: %ld\r\n"
-        "Connection: close\r\n"
-        "\r\n",
-        size
-    );
-    send(client_sock, header, header_len, 0);
-    size_t bytes;
-    while((bytes = fread(buffer, 1, BF_SIZE, f)) > 0){
-        send(client_sock, buffer, bytes, 0);
-    }
-    fclose(f);
-    free(filepath);
-    return 1;
-}
-
-
-int send_JPG(char *file_name, int client_sock){
+int send_file(char *file_name, int client_sock){
     char buffer[BF_SIZE] = {0};
     char* filepath = make_filepath(file_name); 
 
@@ -205,18 +143,15 @@ int send_JPG(char *file_name, int client_sock){
     fseek(f, 0, SEEK_END);
     long size = ftell(f);
     rewind(f);
+    
+    if(send_header(file_name, client_sock, size) < 0){
+        printf("ER:Sending header\n");
+        fclose(f);
+        free(filepath);
+        return -1;
+    }
 
-    char header[BF_METADATA_SIZE];
-    int header_len = snprintf(header, sizeof(header),
-        "HTTP/1.1 200 OK\r\n"
-        "Server: Demo Web Server\r\n"
-        "Content-Type: image/jpeg\r\n"
-        "Content-Length: %ld\r\n"
-        "Connection: close\r\n"
-        "\r\n",
-        size
-    );
-    send(client_sock, header, header_len, 0);
+    printf("sent header\n");
 
     size_t bytes;
     while((bytes = fread(buffer, 1, BF_SIZE, f)) > 0){
@@ -225,6 +160,46 @@ int send_JPG(char *file_name, int client_sock){
     fclose(f);
     free(filepath);
     return 1;
+}
+int send_header(const char *file_type, int client_sock, long size){
+    char header[BF_METADATA_SIZE];
+    int header_len;
+
+    if(strstr(file_type,"jpg") != NULL || strstr(file_type, "png") != NULL){
+        printf("IN JPG\n");
+        header_len = snprintf(header, sizeof(header),
+        "HTTP/1.1 200 OK\r\n"
+        "Server: Demo Web Server\r\n"
+        "Content-Type: image/jpeg\r\n"
+        "Content-Length: %ld\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        size
+    );
+        send(client_sock, header, header_len, 0);
+        return 1;
+    }
+
+    else if(strstr(file_type, "html") != NULL || strcmp(file_type, "/") == 0){
+        printf("HEADER HTML OR /\n");
+        header_len = snprintf(header, sizeof(header),
+        "HTTP/1.1 200 OK\r\n"
+        "Server: Demo Web Server\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: %ld\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        size
+    );
+        send(client_sock, header, header_len, 0);
+        return 1;
+    }
+
+    else{
+        send_404(client_sock);
+        return -1;
+    }
+
 }
 
 char *make_filepath(const char *filename){
