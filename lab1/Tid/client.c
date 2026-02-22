@@ -9,7 +9,7 @@
 
 
 #define SERVER_PORT 8080 //DEFAULT
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "127.0.0.1" //localhost
 #define RFC_TIME 2208988800UL
 
 
@@ -28,9 +28,7 @@ int main(int argc, char *argv[]){
         printf("ER:SOCK\n");
         return -1;
     }
-    // if(setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &opt, sizeof(opt)) < 0){
-    //      printf("setsocketopt to SO_REUSEADDR");
-    //  }
+
 
     //set and allow address
     memset(&serveraddr, 0, sizeof(struct sockaddr_in));
@@ -39,7 +37,6 @@ int main(int argc, char *argv[]){
     inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);
 
     //SEND FROM CLIENT
-    char req = 0;
     sendto(sd, NULL,0, 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
     uint32_t rfc_time;

@@ -17,6 +17,7 @@ int main(int argc, char *argv[]){
     if(argc > 1){
         port = atoi(argv[1]);
     }
+
     int opt = 1;
     int udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); //IPPROTO_UDP
     if(udp_socket < 0){
@@ -31,9 +32,9 @@ int main(int argc, char *argv[]){
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_port = htons(port);
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
+    
     if((bind(udp_socket, (struct sockaddr*) &serveraddr, sizeof(serveraddr))) < 0){
-        close(udp_socket);
+        //close(udp_socket);
             printf("ER:bind %d\n", udp_socket);
         return -1;
     }
@@ -45,8 +46,8 @@ int main(int argc, char *argv[]){
         struct sockaddr_in clientaddr;
         socklen_t clientlen = sizeof(clientaddr);
 
-        ssize_t n = recvfrom(udp_socket, test, sizeof(test), 0, (struct sockaddr*)&clientaddr, &clientlen);
-        if(n <0 ){
+        ssize_t n = recvfrom(udp_socket, test, sizeof(test), 0, (struct sockaddr*)& clientaddr, &clientlen);
+        if(n < 0 ){
             printf("ER: recive\n");
             continue;
         }
@@ -54,6 +55,7 @@ int main(int argc, char *argv[]){
         time_t tid = time(NULL);
         uint32_t rfc = (uint32_t)(tid + RFC_TIME);  
         uint32_t time = htonl(rfc);
+        
 
         if(sendto(udp_socket, &time, sizeof(time), 0, (struct sockaddr*)&clientaddr, clientlen) < 0){
             printf("ERROR: SEND\n");
