@@ -1,5 +1,6 @@
 #include "Sim_Engine.h"
-
+#define PACKAGE_SIZE 20
+#define A 0
   static struct pkt A_lastpkt;
   static int A_waiting_for_ack = 0; /* 1 if waiting for ACK */
   static int A_seqnum = 0; 
@@ -12,14 +13,12 @@ void A_output(struct msg message) {
   if(A_waiting_for_ack){
     return;
   }
-  int A = 0;
   struct pkt mypacket;
   mypacket.seqnum = A_seqnum;
   mypacket.acknum = 0;
-  // mypacket->payload = message.data;
 
   int sum = 0;
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < PACKAGE_SIZE; i++) {
     char b = message.data[i];
     mypacket.payload[i] = message.data[i];
     sum += b;
@@ -29,9 +28,9 @@ void A_output(struct msg message) {
   A_lastpkt = mypacket;
 
   //send
-  tolayer3(0, mypacket);
+  tolayer3(A, mypacket);
   starttimer(A, 20.0);
-  A_waiting_for_ack = 1;
+  A_waiting_for_ack = 1; 
   /* TODO */
 }
 
@@ -40,16 +39,15 @@ void A_input(struct pkt packet) {
   
 /*check for corrupted. Recalculate the checksum
 and compare to the packet.*/
-  int A = 0;
-  int sum = 0;
-  for(int i = 0; i<20; i++){
-    sum += packet.payload[i];
-  }
+  // int sum = 0;
+  // for(int i = 0; i<20; i++){
+  //   sum += packet.payload[i];
+  // }
 
-  //if corrupted throw packet
-  if(sum != packet.checksum){
-    return; 
-  }
+  // //if corrupted throw packet
+  // if(sum != packet.checksum){
+  //   return; 
+  // }
   //if right packet
   if (packet.acknum == A_seqnum + 1 && A_waiting_for_ack) {
     stoptimer(A);
@@ -61,10 +59,9 @@ and compare to the packet.*/
 
 /* Called when A's timer goes off */
 void A_timerinterrupt() {
-  int A = 0;
-  /* If still waiting for ACK, retransmit last packet and restart timer */
-  if (A_waiting_for_ack) {
-    tolayer3(0, A_lastpkt);
+  /*if still waiting for ACK, retransmit last packet and restart timer */
+  if (A_waiting_for_ack) { // if(A_waiting_for_ack == 1)
+    tolayer3(A, A_lastpkt);
     starttimer(A, 20.0);
   }
   /* TODO */

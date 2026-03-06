@@ -1,6 +1,6 @@
 #include "Sim_Engine.h"
 static int B_expected_seq = 0; //exoected seq
-
+#define B 1
 
 /* Called from layer 5, passed the data to be sent to other side */
 void B_output( struct msg message) {
@@ -8,7 +8,6 @@ void B_output( struct msg message) {
 }
 
 void B_input(struct pkt packet) {
-  int B = 1;
 
   //recalculate checksum for packet
   int sum = 0;
@@ -37,6 +36,7 @@ void B_input(struct pkt packet) {
 }
 
 void B_timerinterrupt() {
+  
 }  
 
 void B_init() {
