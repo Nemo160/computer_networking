@@ -1,15 +1,24 @@
 #include "Sim_Engine.h"
 #define PACKAGE_SIZE 20
 #define A 0
-  static struct pkt A_lastpkt;
-  static int A_waiting_for_ack = 0; /* 1 if waiting for ACK */
-  static int A_seqnum = 0; 
+static struct pkt A_lastpkt;
+static int A_waiting_for_ack = 0; /* 1 if waiting for ACK */
+static int A_seqnum = 0; 
+
+static int calc_sum(struct pkt pack){
+  int sum = 0;
+  sum += pack.acknum;
+  sum += pack.seqnum;
+  for(int i = 0; i < PACKAGE_SIZE; i++) {
+    sum += (unsigned char)pack.payload[i];
+  }
+  return sum;
+}
+
+
+
 /* Called from layer 5, passed the data to be sent to other side */
 void A_output(struct msg message) {
-  /*recieves data from layer 5 (output) then
-  supposed to fill data into input packet, which
-  then is sent to layer 3 and recieved by
-  B_input*/
   if(A_waiting_for_ack){
     return;
   }
@@ -17,54 +26,40 @@ void A_output(struct msg message) {
   mypacket.seqnum = A_seqnum;
   mypacket.acknum = 0;
 
-  int sum = 0;
-  for (int i = 0; i < PACKAGE_SIZE; i++) {
-    char b = message.data[i];
+  for(int i = 0; i < PACKAGE_SIZE; i++) {
     mypacket.payload[i] = message.data[i];
-    sum += b;
   }
 
-  mypacket.checksum = sum;
+  mypacket.checksum = calc_sum(mypacket);
   A_lastpkt = mypacket;
 
   //send
   tolayer3(A, mypacket);
   starttimer(A, 20.0);
   A_waiting_for_ack = 1; 
-  /* TODO */
 }
 
 /* Called from layer 3, when a packet arrives for layer 4 */
 void A_input(struct pkt packet) { 
-  
-/*check for corrupted. Recalculate the checksum
-and compare to the packet.*/
-  // int sum = 0;
-  // for(int i = 0; i<20; i++){
-  //   sum += packet.payload[i];
-  // }
-
   // //if corrupted throw packet
-  // if(sum != packet.checksum){
-  //   return; 
-  // }
+  if(calc_sum(packet) != packet.checksum){
+    return; 
+  }
   //if right packet
-  if (packet.acknum == A_seqnum + 1 && A_waiting_for_ack) {
+  if(packet.acknum == A_seqnum && A_waiting_for_ack) {
     stoptimer(A);
     A_waiting_for_ack = 0;
-    A_seqnum++;
+    A_seqnum = 1 - A_seqnum;
   }
-  /* TODO */ 
 }
 
 /* Called when A's timer goes off */
 void A_timerinterrupt() {
   /*if still waiting for ACK, retransmit last packet and restart timer */
-  if (A_waiting_for_ack) { // if(A_waiting_for_ack == 1)
+  if(A_waiting_for_ack) {
     tolayer3(A, A_lastpkt);
     starttimer(A, 20.0);
   }
-  /* TODO */
  }
 
 /* The following routine will be called once (only) before any other */
@@ -73,6 +68,8 @@ void A_init() {
   //reset
   A_waiting_for_ack = 0;
   A_seqnum = 0;
-  /* TODO */ 
 
 }
+
+
+

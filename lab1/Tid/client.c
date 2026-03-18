@@ -34,21 +34,21 @@ int main(int argc, char *argv[]){
     memset(&serveraddr, 0, sizeof(struct sockaddr_in));
     serveraddr.sin_family = AF_INET; //declare that ip is ipv4 
     serveraddr.sin_port = htons(port);
-    inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);
+    inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr); //from string to byte format
 
     //SEND FROM CLIENT
     sendto(sd, NULL,0, 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
     uint32_t rfc_time;
-    ssize_t n = recvfrom(sd, &rfc_time, sizeof(rfc_time), 0, NULL, NULL);
+    ssize_t n = recvfrom(sd, &rfc_time, sizeof(rfc_time), 0, NULL, NULL); //recv time from server
     if(n<0){
         printf("ER:READ\n");
         close(sd);
         return -1;
     }
 
-    //convert time
-    uint32_t new_rfc = ntohl(rfc_time);
+    //convert time back to unix time and undo htonl conversion
+    uint32_t new_rfc = ntohl(rfc_time); 
     time_t time_now = (time_t)(new_rfc - RFC_TIME);
     printf("%s", ctime(&time_now));
 

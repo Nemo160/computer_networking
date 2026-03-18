@@ -18,4 +18,4 @@ Example run:
 
 
 
-    inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);
+    //inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);

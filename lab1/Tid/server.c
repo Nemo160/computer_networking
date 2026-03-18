@@ -24,12 +24,12 @@ int main(int argc, char *argv[]){
         printf("ER:socket\n");
         return -1;
     }
-    if(setsockopt(udp_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0){
+    if(setsockopt(udp_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){
         printf("setsocketopt to SO_REUSEADDR");
     }
     struct sockaddr_in serveraddr;
-    memset(&serveraddr, 0, sizeof(serveraddr)); // fill struct with 0
-    serveraddr.sin_family = AF_INET;
+    memset(&serveraddr, 0, sizeof(serveraddr)); //init struct with 0
+    serveraddr.sin_family = AF_INET; //use ipv4 address
     serveraddr.sin_port = htons(port);
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     
@@ -47,17 +47,21 @@ int main(int argc, char *argv[]){
         socklen_t clientlen = sizeof(clientaddr);
 
         ssize_t n = recvfrom(udp_socket, test, sizeof(test), 0, (struct sockaddr*)& clientaddr, &clientlen);
+        //recieves data and stores in test. Save who sent it into clientaddr. 
+        //returns how many bytes were recieved.
+
         if(n < 0 ){
             printf("ER: recive\n");
             continue;
         }
 
         time_t tid = time(NULL);
-        uint32_t rfc = (uint32_t)(tid + RFC_TIME);  
-        uint32_t time = htonl(rfc);
+        uint32_t rfc = (uint32_t)(tid + RFC_TIME);  //converts unix time (1970) to rfc (1900)
+        uint32_t time = htonl(rfc); // convert to big endian so all computers understand
         
 
         if(sendto(udp_socket, &time, sizeof(time), 0, (struct sockaddr*)&clientaddr, clientlen) < 0){
+            //send rfc time to saved client
             printf("ERROR: SEND\n");
         } 
     }

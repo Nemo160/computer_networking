@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 
     int opt = 1;
     int client_fd = 1;
-    int req_sd;
+    int req_fd;
     struct sockaddr_in addr;
     struct sockaddr_in clientaddr;
     socklen_t clientaddrlen;
@@ -40,12 +40,12 @@ int main(int argc, char *argv[]){
     //SETUP REQUEST SOCKET:
     //SOCK_DGRAM for UDP CONNECTION or SOCK_STREAM FOR TCP IPPROTO
 
-    req_sd = socket(AF_INET, SOCK_STREAM, 0);
-    if(req_sd <0) {
+    req_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(req_fd <0) {
         printf("SOCKET COULD NOT BE CREATED!\n");
         return -1;
     }
-    if(setsockopt(req_sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){
+    if(setsockopt(req_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){ //allow reusage of address
         printf("setsocketopt to SO_REUSEADDR");
     }
 
@@ -58,12 +58,12 @@ int main(int argc, char *argv[]){
     //PASSIVE WAIT FOR CONNECTION
     //SERVER: BIND AND LISTEN FOR CONNECTIONS
 
-    if(bind(req_sd, (struct sockaddr*) &addr, sizeof(addr)) < 0){
+    if(bind(req_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0){
         printf("ER:bind\n");
         return -1;
     }
 
-    if((listen(req_sd,10)) < 0){
+    if((listen(req_fd,10)) < 0){
         printf("ER:listen\n");
         return -1;
     }
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
     
     //keeps server alive
     while(1){
-        client_fd = accept(req_sd, (struct sockaddr*) &clientaddr, &clientaddrlen);
+        client_fd = accept(req_fd, (struct sockaddr*) &clientaddr, &clientaddrlen);
         printf("ACCEPTING CONNECTION\n");
         //client_fd = accept(req_sd, 0, 0);
 
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]){
 
     }
     
-    close(req_sd);
+    close(req_fd);
     return 0;
 }
 
@@ -97,9 +97,6 @@ void recv_client_req(int client_sock){
     buffer[n] = '\0';
     //printf("BUFFER CLIENT: %s\n", buffer);
 
-    // if(strncmp(buffer, "GET ", 4) != 0){ //if its not a get request
-    //     return;
-    // }
 
     char *file_name = buffer + 4;  //after "GET " 
     char *bs = strchr(file_name, ' '); //jump to blank space
@@ -136,7 +133,6 @@ int send_file(char *file_name, int client_sock){
     if(!f){
         send_404(client_sock);
         printf("COULD NOT OPEN FILE");
-        free(filepath);
         return -1;
     }
 
