@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#define SERVER_PORT 8080 //DEFAULT
+#define SERVER_PORT 37 //DEFAULT
 #define RFC_TIME 2208988800UL
 
 int main(int argc, char *argv[]){

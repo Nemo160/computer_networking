@@ -8,7 +8,7 @@
 #include <time.h>
 
 
-#define SERVER_PORT 8080 //DEFAULT
+#define SERVER_PORT 37 //DEFAULT
 #define SERVER_IP "127.0.0.1" //localhost
 #define RFC_TIME 2208988800UL
 
@@ -18,8 +18,6 @@ int main(int argc, char *argv[]){
     if(argc > 1){
         port = atoi(argv[1]);
     }
-    
-    int opt =1;
     int sd;
 
     struct sockaddr_in serveraddr;
@@ -37,7 +35,12 @@ int main(int argc, char *argv[]){
     inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr); //from string to byte format
 
     //SEND FROM CLIENT
-    sendto(sd, NULL,0, 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
+    char req = 0;
+    if(sendto(sd, &req,1, 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr)) < 0){
+        printf("ER: SENDTO");
+        close(sd);
+        return -1;
+    }
 
     uint32_t rfc_time;
     ssize_t n = recvfrom(sd, &rfc_time, sizeof(rfc_time), 0, NULL, NULL); //recv time from server

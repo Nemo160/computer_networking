@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    printf("LISTENING TO PORT: %d\n", SERVER_PORT);
+    printf("LISTENING TO PORT: %d\n", port);
     clientaddrlen = sizeof(struct sockaddr_in);
     
     //keeps server alive
@@ -133,6 +133,7 @@ int send_file(char *file_name, int client_sock){
     if(!f){
         send_404(client_sock);
         printf("COULD NOT OPEN FILE");
+        free(filepath);
         return -1;
     }
 
@@ -161,7 +162,7 @@ int send_header(const char *file_type, int client_sock, long size){
     char header[BF_METADATA_SIZE];
     int header_len;
 
-    if(strstr(file_type,"jpg") != NULL || strstr(file_type, "png") != NULL){
+    if(strstr(file_type,"jpg") != NULL ){
         printf("IN JPG\n");
         header_len = snprintf(header, sizeof(header),
         "HTTP/1.1 200 OK\r\n"
