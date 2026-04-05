@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#define SERVER_PORT 37 //DEFAULT
+#define SERVER_PORT 3737 //DEFAULT
 #define RFC_TIME 2208988800UL
 
 int main(int argc, char *argv[]){
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
             continue;
         }
 
-        time_t tid = time(NULL);
+        time_t tid = time(NULL); //unix time
         uint32_t rfc = (uint32_t)(tid + RFC_TIME);  //converts unix time (1970) to rfc (1900)
         uint32_t time = htonl(rfc); // convert to big endian so all computers understand
         

@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
         printf("SOCKET COULD NOT BE CREATED!\n");
         return -1;
     }
-    if(setsockopt(req_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){ //allow reusage of address
+    if(setsockopt(req_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0){ //allow reusage of port. // enable SO_REUSEADDR
         printf("setsocketopt to SO_REUSEADDR");
     }
 
@@ -97,7 +97,6 @@ void recv_client_req(int client_sock){
     buffer[n] = '\0';
     //printf("BUFFER CLIENT: %s\n", buffer);
 
-
     char *file_name = buffer + 4;  //after "GET " 
     char *bs = strchr(file_name, ' '); //jump to blank space
     if(bs == NULL){
@@ -105,7 +104,7 @@ void recv_client_req(int client_sock){
         return;
     }
 
-    *bs = '\0';
+    *bs = '\0'; 
     send_file(file_name, client_sock);
 }
 

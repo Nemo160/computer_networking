@@ -12,10 +12,9 @@ Example build:
 gcc server.c -o server
 gcc client.c -o client
 
+After compiling run each program in seperate terminals.
 Example run:
 ./server <port>
 ./client <port> 
 
 
-
-    //inet_pton(AF_INET, SERVER_IP, &serveraddr.sin_addr);

@@ -8,7 +8,7 @@
 #include <time.h>
 
 
-#define SERVER_PORT 37 //DEFAULT
+#define SERVER_PORT 3737 //DEFAULT
 #define SERVER_IP "127.0.0.1" //localhost
 #define RFC_TIME 2208988800UL
 
