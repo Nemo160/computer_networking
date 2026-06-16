@@ -34,7 +34,3 @@ C, TCP sockets (Lab 1), simulated network environments (Labs 2–3)
 - How reliable data transfer is built on top of an unreliable network layer
 - How distance vector routing (Bellman-Ford) computes and converges on shortest paths
 - Structuring shared logic in C across multiple simulated network nodes
-
-## How to run
-
-_(add your actual build/run command(s) here — one per lab if they're separate programs)_
